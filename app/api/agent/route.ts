@@ -14,7 +14,7 @@ export const runtime = "nodejs";
 
 /**
  * POST /api/agent
- * Lance l’agent LangGraph et stream les events via SSE
+ * Lance l'agent LangGraph et stream les events via SSE
  */
 export async function POST(req: NextRequest) {
   let body: AgentRequest;
@@ -23,6 +23,10 @@ export async function POST(req: NextRequest) {
     body = (await req.json()) as AgentRequest;
   } catch {
     return new Response("Invalid JSON body", { status: 400 });
+  }
+
+  if (!body.repo) {
+    return new Response("Missing repo in request body", { status: 400 });
   }
 
   // --- Choix du provider LLM ---
@@ -38,6 +42,8 @@ export async function POST(req: NextRequest) {
       (m) => new HumanMessage(m.content)
     ),
     events: [],
+    repo: body.repo,
+    branch: body.branch || "main",
   };
 
   const graph = buildGraph(llm);

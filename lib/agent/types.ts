@@ -24,4 +24,6 @@ export type AgentRequest = {
     role: "user" | "assistant";
     content: string;
   }[];
+  repo: string;
+  branch: string;
 };

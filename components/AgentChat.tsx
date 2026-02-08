@@ -5,7 +5,12 @@ import type { AgentEvent } from "@/lib/agent/types";
 
 type Provider = "openai" | "gemini";
 
-export default function AgentChat() {
+type Props = {
+  repo: string;
+  branch: string;
+};
+
+export default function AgentChat({ repo, branch }: Props) {
   const [input, setInput] = useState("");
   const [events, setEvents] = useState<AgentEvent[]>([]);
   const [provider, setProvider] = useState<Provider>("openai");
@@ -23,6 +28,8 @@ export default function AgentChat() {
       },
       body: JSON.stringify({
         messages: [{ role: "user", content: input }],
+        repo,
+        branch,
       }),
     });
 
@@ -114,7 +121,7 @@ export default function AgentChat() {
           key={index}
           className="bg-red-100 text-red-800 p-2 rounded text-sm"
         >
-          ❌ {event.message}
+          {event.message}
         </div>
       );
     }
@@ -124,6 +131,17 @@ export default function AgentChat() {
 
   return (
     <div className="space-y-4">
+      {/* Repo context indicator */}
+      {repo ? (
+        <div className="text-xs text-green-700 bg-green-50 px-2 py-1 rounded">
+          Repo : {repo} ({branch})
+        </div>
+      ) : (
+        <div className="text-xs text-amber-700 bg-amber-50 px-2 py-1 rounded">
+          Aucun repo sélectionné — sélectionnez un repo ci-dessus.
+        </div>
+      )}
+
       {/* Provider selector */}
       <div className="flex items-center gap-2">
         <label className="text-sm font-medium">LLM :</label>
@@ -149,7 +167,7 @@ export default function AgentChat() {
       {/* Run button */}
       <button
         onClick={runAgent}
-        disabled={loading || !input}
+        disabled={loading || !input || !repo}
         className="px-4 py-2 bg-black text-white rounded disabled:opacity-50"
       >
         {loading ? "Agent en cours…" : "Run agent"}
@@ -159,7 +177,7 @@ export default function AgentChat() {
       <div className="space-y-2 border rounded p-3">
         {events.length === 0 && (
           <div className="text-xs text-zinc-500">
-            Aucun événement pour l’instant.
+            Aucun événement pour l'instant.
           </div>
         )}
         {events.map(renderEvent)}

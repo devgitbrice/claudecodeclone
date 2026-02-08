@@ -12,8 +12,10 @@ export async function GET(req: NextRequest) {
   if (!repo) return new Response("Missing repo", { status: 400 });
   if (!path) return new Response("Missing path", { status: 400 });
 
+  // Encode each path segment individually to preserve slashes
+  const encodedPath = path.split("/").map(encodeURIComponent).join("/");
   const res = await ghFetch(
-    `https://api.github.com/repos/${repo}/contents/${encodeURIComponent(path)}?ref=${encodeURIComponent(ref)}`
+    `https://api.github.com/repos/${repo}/contents/${encodedPath}?ref=${encodeURIComponent(ref)}`
   );
 
   if (!res.ok) return new Response(await res.text(), { status: res.status });

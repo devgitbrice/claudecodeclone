@@ -4,10 +4,20 @@ import { useEffect, useState } from "react";
 
 type RepoItem = { full_name: string; private: boolean; default_branch: string };
 
-export default function GithubRepoLoader() {
+type Props = {
+  selectedRepo: string;
+  onSelectRepo: (repo: string) => void;
+  branch: string;
+  onBranchChange: (branch: string) => void;
+};
+
+export default function GithubRepoLoader({
+  selectedRepo,
+  onSelectRepo,
+  branch,
+  onBranchChange,
+}: Props) {
   const [repos, setRepos] = useState<RepoItem[]>([]);
-  const [selectedRepo, setSelectedRepo] = useState<string>("");
-  const [branch, setBranch] = useState<string>("main");
   const [files, setFiles] = useState<string[]>([]);
   const [selectedFile, setSelectedFile] = useState<string>("");
   const [fileContent, setFileContent] = useState<string>("");
@@ -62,10 +72,10 @@ export default function GithubRepoLoader() {
     setFileContent(data.content || "");
   }
 
-  function onSelectRepo(repoFullName: string) {
-    setSelectedRepo(repoFullName);
+  function handleSelectRepo(repoFullName: string) {
+    onSelectRepo(repoFullName);
     const r = repos.find(x => x.full_name === repoFullName);
-    setBranch(r?.default_branch || "main");
+    onBranchChange(r?.default_branch || "main");
   }
 
   return (
@@ -78,7 +88,7 @@ export default function GithubRepoLoader() {
         <select
           className="border rounded px-2 py-1 text-sm w-full"
           value={selectedRepo}
-          onChange={(e) => onSelectRepo(e.target.value)}
+          onChange={(e) => handleSelectRepo(e.target.value)}
         >
           <option value="">-- Choisir un repo --</option>
           {repos.map((r) => (
@@ -91,7 +101,7 @@ export default function GithubRepoLoader() {
         <input
           className="border rounded px-2 py-1 text-sm w-40"
           value={branch}
-          onChange={(e) => setBranch(e.target.value)}
+          onChange={(e) => onBranchChange(e.target.value)}
           placeholder="branch"
         />
 

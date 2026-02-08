@@ -20,6 +20,8 @@ import { runPlanner, generatePatch } from "./planner";
 const GraphState = Annotation.Root({
   messages: Annotation<BaseMessage[]>(),
   events: Annotation<any[]>(),
+  repo: Annotation<string>(),
+  branch: Annotation<string>(),
 });
 
 /**
@@ -29,7 +31,7 @@ async function analyze(state: AgentState): Promise<AgentState> {
   state.events.push({
     type: "message",
     role: "assistant",
-    content: "🔍 Analyse du message utilisateur…",
+    content: `🔍 Analyse du message utilisateur… (repo: ${state.repo}, branche: ${state.branch})`,
   });
 
   return state;
@@ -39,13 +41,15 @@ async function analyze(state: AgentState): Promise<AgentState> {
  * Node 2 — Investigation réelle du repo (rg + read_file)
  */
 async function investigate(state: AgentState): Promise<AgentState> {
-  const query = "allow_adult";
+  // Extract the search query from the user's message instead of hardcoding
+  const userMessage = state.messages[0]?.content?.toString() || "";
+  const query = userMessage.slice(0, 100) || "bug";
 
   // --- search_repo ---
   state.events.push({
     type: "tool_start",
     tool: "search_repo",
-    input: { query },
+    input: { query, repo: state.repo },
   });
 
   let searchResult = "";

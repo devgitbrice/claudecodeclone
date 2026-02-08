@@ -11,7 +11,9 @@ export async function GET(req: NextRequest) {
   if (!repo) return new Response("Missing repo", { status: 400 });
 
   // 1) récupérer le SHA du branch
-  const refRes = await ghFetch(`https://api.github.com/repos/${repo}/git/ref/heads/${encodeURIComponent(branch)}`);
+  // Don't encode slashes in branch names (e.g. feature/my-feature)
+  const encodedBranch = branch.split("/").map(encodeURIComponent).join("/");
+  const refRes = await ghFetch(`https://api.github.com/repos/${repo}/git/ref/heads/${encodedBranch}`);
   if (!refRes.ok) return new Response(await refRes.text(), { status: refRes.status });
   const refData = await refRes.json() as { object: { sha: string } };
 

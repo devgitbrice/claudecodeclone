@@ -24,7 +24,7 @@ export async function getInstallationToken(): Promise<string> {
   const payload = {
     iat: now - 30,
     exp: now + 9 * 60,
-    iss: appId,
+    iss: Number(appId),
   };
 
   const appJwt = jwt.sign(payload, privateKey, { algorithm: "RS256" });

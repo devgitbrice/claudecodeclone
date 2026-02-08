@@ -1,7 +1,8 @@
 // lib/agent/graph.ts
 
-import { StateGraph, END } from "@langchain/langgraph";
+import { StateGraph, END, Annotation } from "@langchain/langgraph";
 import { AIMessage } from "@langchain/core/messages";
+import type { BaseMessage } from "@langchain/core/messages";
 
 import { AgentState } from "./state";
 import { LLMProvider } from "../llm/provider";
@@ -12,6 +13,14 @@ import { applyPatch } from "../tools/applyPatch";
 import { gitDiff } from "../tools/gitDiff";
 
 import { runPlanner, generatePatch } from "./planner";
+
+/**
+ * Schema d'état LangGraph (requis par certaines versions: StateGraph(schema))
+ */
+const GraphState = Annotation.Root({
+  messages: Annotation<BaseMessage[]>(),
+  events: Annotation<any[]>(),
+});
 
 /**
  * Node 1 — Analyse initiale
@@ -86,9 +95,7 @@ async function investigate(state: AgentState): Promise<AgentState> {
 
   // Injecter le contexte code pour le LLM
   state.messages.push(
-    new AIMessage(
-      `Fichier ${filePath} (extrait) :\n\n${fileContent}`
-    )
+    new AIMessage(`Fichier ${filePath} (extrait) :\n\n${fileContent}`)
   );
 
   return state;
@@ -97,10 +104,7 @@ async function investigate(state: AgentState): Promise<AgentState> {
 /**
  * Node 3 — Génération + application du patch + git diff
  */
-async function patch(
-  state: AgentState,
-  llm: LLMProvider
-): Promise<AgentState> {
+async function patch(state: AgentState, llm: LLMProvider): Promise<AgentState> {
   state.events.push({
     type: "message",
     role: "assistant",
@@ -156,9 +160,7 @@ async function patch(
     });
 
     // Injecter le diff dans le contexte LLM
-    state.messages.push(
-      new AIMessage(`Diff git après correction :\n\n${diff}`)
-    );
+    state.messages.push(new AIMessage(`Diff git après correction :\n\n${diff}`));
   } catch (e) {
     state.events.push({
       type: "error",
@@ -193,11 +195,11 @@ async function conclude(
  * Construction du graphe LangGraph
  */
 export function buildGraph(llm: LLMProvider) {
-  const graph = new StateGraph<AgentState>()
-    .addNode("analyze", analyze)
-    .addNode("investigate", investigate)
-    .addNode("patch", (state) => patch(state, llm))
-    .addNode("conclude", (state) => conclude(state, llm))
+  const graph = new StateGraph(GraphState)
+    .addNode("analyze", analyze as any)
+    .addNode("investigate", investigate as any)
+    .addNode("patch", ((state: AgentState) => patch(state, llm)) as any)
+    .addNode("conclude", ((state: AgentState) => conclude(state, llm)) as any)
     .addEdge("analyze", "investigate")
     .addEdge("investigate", "patch")
     .addEdge("patch", "conclude")

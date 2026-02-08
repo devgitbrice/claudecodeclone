@@ -2,16 +2,19 @@
 
 import { NextRequest } from "next/server";
 import { HumanMessage } from "@langchain/core/messages";
-import { buildGraph } from "@/lib/agent/graph";
-import { openAIProvider } from "@/lib/llm/openai";
-import { geminiProvider } from "@/lib/llm/gemini";
-import { AgentRequest } from "@/lib/agent/types";
+
+import { buildGraph } from "../../../lib/agent/graph";
+import { AgentState } from "../../../lib/agent/state";
+import { AgentRequest } from "../../../lib/agent/types";
+
+import { openAIProvider } from "../../../lib/llm/openai";
+import { geminiProvider } from "../../../lib/llm/gemini";
 
 export const runtime = "nodejs";
 
 /**
  * POST /api/agent
- * Lance l’agent LangGraph et stream les events (SSE)
+ * Lance l’agent LangGraph et stream les events via SSE
  */
 export async function POST(req: NextRequest) {
   let body: AgentRequest;
@@ -29,8 +32,8 @@ export async function POST(req: NextRequest) {
       ? geminiProvider()
       : openAIProvider();
 
-  // --- Initial state ---
-  const initialState = {
+  // --- État initial (TYPÉ CORRECTEMENT) ---
+  const initialState: AgentState = {
     messages: body.messages.map(
       (m) => new HumanMessage(m.content)
     ),

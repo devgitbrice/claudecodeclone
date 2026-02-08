@@ -9,7 +9,7 @@ export default function Home() {
       <header className="space-y-1">
         <h1 className="text-xl font-semibold">Claude Code Clone</h1>
         <p className="text-sm text-zinc-500">
-          Agent + accès GitHub (API) : choisir un repo, explorer les fichiers, puis lancer l’agent.
+          Agent + accès GitHub (API) : choisir un repo !, explorer les fichiers, puis lancer l’agent.
         </p>
       </header>
 

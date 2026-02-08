@@ -2,13 +2,14 @@
 
 import { StateGraph, END } from "@langchain/langgraph";
 import { AIMessage } from "@langchain/core/messages";
-import { AgentState } from "./state";
-import { LLMProvider } from "@/lib/llm/provider";
 
-import { searchRepo } from "@/lib/tools/searchRepo";
-import { readFile } from "@/lib/tools/readFile";
-import { applyPatch } from "@/lib/tools/applyPatch";
-import { gitDiff } from "@/lib/tools/gitDiff";
+import { AgentState } from "./state";
+import { LLMProvider } from "../llm/provider";
+
+import { searchRepo } from "../tools/searchRepo";
+import { readFile } from "../tools/readFile";
+import { applyPatch } from "../tools/applyPatch";
+import { gitDiff } from "../tools/gitDiff";
 
 import { runPlanner, generatePatch } from "./planner";
 

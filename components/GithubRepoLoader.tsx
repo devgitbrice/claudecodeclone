@@ -27,13 +27,18 @@ export default function GithubRepoLoader({
   useEffect(() => {
     (async () => {
       setError("");
-      const res = await fetch("/api/github/repos");
-      if (!res.ok) {
-        setError(await res.text());
-        return;
+      try {
+        const res = await fetch("/api/github/repos");
+        if (!res.ok) {
+          const text = await res.text();
+          setError(text || `Erreur ${res.status} lors du chargement des repos`);
+          return;
+        }
+        const data = await res.json();
+        setRepos(data.repositories || []);
+      } catch (e) {
+        setError(`Impossible de contacter l'API : ${e instanceof Error ? e.message : String(e)}`);
       }
-      const data = await res.json();
-      setRepos(data.repositories || []);
     })();
   }, []);
 

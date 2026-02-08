@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
       ? geminiProvider()
       : openAIProvider();
 
-  // --- État initial (TYPÉ CORRECTEMENT) ---
+  // --- État initial ---
   const initialState: AgentState = {
     messages: body.messages.map(
       (m) => new HumanMessage(m.content)
@@ -42,8 +42,8 @@ export async function POST(req: NextRequest) {
 
   const graph = buildGraph(llm);
 
-  // --- Exécution de l’agent ---
-  const result = await graph.invoke(initialState);
+  // ⚠️ Cast nécessaire (LangGraph TS limitation)
+  const result = await graph.invoke(initialState as any);
 
   // --- Streaming SSE ---
   const encoder = new TextEncoder();

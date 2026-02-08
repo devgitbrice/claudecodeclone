@@ -38,7 +38,7 @@ async function analyze(state: AgentState): Promise<AgentState> {
 }
 
 /**
- * Node 2 — Investigation réelle du repo (rg + read_file)
+ * Node 2 — Investigation réelle du repo (GitHub API search + read_file)
  */
 async function investigate(state: AgentState): Promise<AgentState> {
   // Extract the search query from the user's message instead of hardcoding
@@ -54,7 +54,7 @@ async function investigate(state: AgentState): Promise<AgentState> {
 
   let searchResult = "";
   try {
-    searchResult = await searchRepo(query);
+    searchResult = await searchRepo(query, state.repo);
   } catch (e) {
     searchResult = String(e);
   }
@@ -86,7 +86,7 @@ async function investigate(state: AgentState): Promise<AgentState> {
 
   let fileContent = "";
   try {
-    fileContent = await readFile(filePath, 0, 200);
+    fileContent = await readFile(filePath, state.repo, state.branch, 0, 200);
   } catch (e) {
     fileContent = String(e);
   }

@@ -1,28 +1,40 @@
-import { spawn } from "child_process";
+import { ghFetch } from "../github/client";
 
-export async function searchRepo(query: string): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const rg = spawn("rg", ["-n", query, "."], {
-      cwd: process.cwd(),
-    });
+/**
+ * Search for code in a GitHub repository using the GitHub Code Search API.
+ *
+ * @param query  Text to search for
+ * @param repo   Full repo name, e.g. "owner/name"
+ */
+export async function searchRepo(query: string, repo: string): Promise<string> {
+  // GitHub code-search endpoint:  GET /search/code?q={query}+repo:{owner/name}
+  const q = encodeURIComponent(`${query} repo:${repo}`);
+  const res = await ghFetch(
+    `https://api.github.com/search/code?q=${q}&per_page=10`,
+    { headers: { Accept: "application/vnd.github.text-match+json" } }
+  );
 
-    let output = "";
-    let error = "";
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`GitHub code search failed (${res.status}): ${text}`);
+  }
 
-    rg.stdout.on("data", (data) => {
-      output += data.toString();
-    });
+  const data = (await res.json()) as {
+    total_count: number;
+    items: { name: string; path: string; html_url: string; text_matches?: { fragment: string }[] }[];
+  };
 
-    rg.stderr.on("data", (data) => {
-      error += data.toString();
-    });
+  if (data.total_count === 0) {
+    return "";
+  }
 
-    rg.on("close", (code) => {
-      if (code !== 0 && !output) {
-        reject(error || "No matches found");
-      } else {
-        resolve(output.slice(0, 8_000)); // garde-fou taille
-      }
-    });
+  // Format results similarly to ripgrep output:  path:fragment
+  const lines = data.items.flatMap((item) => {
+    if (item.text_matches && item.text_matches.length > 0) {
+      return item.text_matches.map((m) => `${item.path}:${m.fragment}`);
+    }
+    return [`${item.path}:`];
   });
+
+  return lines.join("\n").slice(0, 8_000); // garde-fou taille
 }
